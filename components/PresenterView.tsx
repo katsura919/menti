@@ -185,8 +185,8 @@ export default function PresenterView({ presentation, slides }: Props) {
 
             {currentSlide?.type === 'poll' && currentSlide.options && (
               <ul className="space-y-1">
-                {currentSlide.options.map((opt) => (
-                  <li key={opt} className="text-sm text-muted-foreground pl-3 border-l-2">
+                {currentSlide.options.map((opt, i) => (
+                  <li key={i} className="text-sm text-muted-foreground pl-3 border-l-2">
                     {opt}
                   </li>
                 ))}

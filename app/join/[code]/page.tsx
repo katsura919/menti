@@ -125,10 +125,10 @@ function AudienceView() {
           event: 'UPDATE',
           schema: 'public',
           table: 'presentations',
-          filter: `id=eq.${presentation.id}`,
         },
         (payload) => {
           const updated = payload.new as Presentation
+          if (updated.id !== presentation.id) return
           setCurrentSlideIndex(updated.current_slide_index)
 
           if (updated.is_active && statusRef.current === 'waiting') {
@@ -145,6 +145,26 @@ function AudienceView() {
       supabase.removeChannel(channel)
     }
   }, [supabase, presentation?.id])
+
+  // Polling fallback: Realtime can silently miss UPDATE events
+  useEffect(() => {
+    if (status !== 'waiting' || !presentation) return
+
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('presentations')
+        .select('is_active, current_slide_index')
+        .eq('id', presentation.id)
+        .single()
+
+      if (data?.is_active) {
+        setCurrentSlideIndex(data.current_slide_index)
+        setStatus('active')
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [status, presentation, supabase])
 
   async function handleSubmit(answer: string) {
     if (!participant || !currentSlide) return
