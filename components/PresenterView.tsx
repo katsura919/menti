@@ -86,7 +86,10 @@ export default function PresenterView({ presentation, slides }: Props) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "responses" },
         (payload) => {
-          const r = { ...(payload.new as Response), participant: null } as ResponseWithParticipant
+          const r = {
+            ...(payload.new as Response),
+            participant: null,
+          } as ResponseWithParticipant
           const activeSlide = slides[currentSlideIndexRef.current]
           if (activeSlide && r.slide_id === activeSlide.id) {
             setResponses((prev) => [...prev, r])
