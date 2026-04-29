@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import { QRCodeSVG } from "qrcode.react"
 import { createClient } from "@/lib/supabase/client"
 import PollResults from "@/components/slides/PollResults"
 import OpenEndedResults from "@/components/slides/OpenEndedResults"
@@ -21,11 +22,16 @@ export default function PresenterView({ presentation, slides }: Props) {
   const [responses, setResponses] = useState<Response[]>([])
   const [participantCount, setParticipantCount] = useState(0)
   const [working, setWorking] = useState(false)
+  const [joinUrl, setJoinUrl] = useState("")
 
   const currentSlideIndexRef = useRef(currentSlideIndex)
   currentSlideIndexRef.current = currentSlideIndex
 
   const currentSlide: Slide | null = slides[currentSlideIndex] ?? null
+
+  useEffect(() => {
+    setJoinUrl(`${window.location.origin}/join/${presentation.join_code}`)
+  }, [presentation.join_code])
 
   async function fetchResponses(slideId: string) {
     const { data } = await supabase
@@ -136,57 +142,150 @@ export default function PresenterView({ presentation, slides }: Props) {
 
   const isFirst = currentSlideIndex === 0
   const isLast = currentSlideIndex === slides.length - 1
+  const joinBase = joinUrl
+    ? new URL(joinUrl).origin.replace(/^https?:\/\//, "")
+    : "menti.talentmucho.com"
 
-  // Lobby: session not started
+  // ── Lobby ────────────────────────────────────────────────────────
   if (!isActive) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-beige-50 p-8 text-charcoal-900">
-        <p className="text-sm font-medium text-taupe-400">
-          {presentation.title}
-        </p>
-        <div className="space-y-3 text-center">
-          <p className="text-xs tracking-widest text-taupe-400 uppercase">
-            Join code
-          </p>
-          <p className="font-mono text-8xl font-bold tracking-widest text-clay-600">
-            {presentation.join_code}
-          </p>
+      <div className="flex min-h-screen flex-col bg-beige-50">
+        {/* Top strip */}
+        <div className="flex items-center justify-between border-b border-beige-200 bg-white px-8 py-4">
+          <div className="flex items-center gap-3">
+            <img
+              src="/assets/tm-logo.png"
+              alt="TalentMucho"
+              className="h-8 w-auto object-contain"
+            />
+            <span className="font-serif text-lg font-light text-charcoal-900">
+              {presentation.title}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-taupe-400">
+            <span className="inline-block h-2 w-2 rounded-full bg-taupe-400" />
+            {participantCount} joined
+          </div>
         </div>
-        <p className="text-sm text-taupe-400">
-          👥 {participantCount} participant{participantCount !== 1 ? "s" : ""}{" "}
-          waiting
-        </p>
-        <button
-          onClick={startSession}
-          disabled={working || slides.length === 0}
-          className="mt-2 rounded-full bg-clay-500 px-10 py-3 text-base font-semibold text-beige-50 transition-colors hover:bg-clay-600 disabled:opacity-40"
-        >
-          {working ? "Starting..." : "Start Session"}
-        </button>
-        {slides.length === 0 && (
-          <p className="text-sm text-red-400">Add slides before starting</p>
-        )}
+
+        {/* Main lobby card */}
+        <div className="flex flex-1 items-center justify-center p-8">
+          <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-beige-200 bg-white shadow-lg">
+            <div className="flex flex-col md:flex-row">
+              {/* QR side */}
+              <div className="flex flex-col items-center justify-center gap-5 bg-beige-50 p-10 md:w-[280px] md:shrink-0">
+                <p className="text-xs font-medium tracking-widest text-taupe-400 uppercase">
+                  Scan to join
+                </p>
+                {joinUrl ? (
+                  <div className="rounded-xl border-4 border-white p-2 shadow-md">
+                    <QRCodeSVG
+                      value={joinUrl}
+                      size={180}
+                      bgColor="#faf8f5"
+                      fgColor="#2a2520"
+                      level="M"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-[196px] w-[196px] animate-pulse rounded-xl bg-beige-200" />
+                )}
+                <p className="text-center text-xs text-taupe-400">{joinBase}</p>
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center justify-center md:py-10">
+                <div className="h-px w-full bg-beige-200 md:h-full md:w-px" />
+                <span className="absolute bg-white px-2 py-1 text-xs font-medium text-taupe-400 md:static md:px-0 md:py-2">
+                  or
+                </span>
+              </div>
+
+              {/* Code side */}
+              <div className="flex flex-1 flex-col justify-center gap-6 p-10">
+                <div>
+                  <p className="mb-3 text-xs font-medium tracking-widest text-taupe-400 uppercase">
+                    Enter code at
+                  </p>
+                  <p className="font-medium text-clay-600">{joinBase}</p>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-xs font-medium tracking-widest text-taupe-400 uppercase">
+                    Code
+                  </p>
+                  <p className="font-mono text-6xl font-bold tracking-[0.15em] text-charcoal-900">
+                    {presentation.join_code}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-taupe-400">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                  </svg>
+                  <span>
+                    <strong className="font-semibold text-charcoal-900">{participantCount}</strong>{" "}
+                    participant{participantCount !== 1 ? "s" : ""} waiting
+                  </span>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={startSession}
+                    disabled={working || slides.length === 0}
+                    className="w-full rounded-xl bg-clay-500 py-3.5 text-base font-semibold text-beige-50 transition-colors hover:bg-clay-600 disabled:opacity-40"
+                  >
+                    {working ? "Starting..." : "Start Session →"}
+                  </button>
+                  {slides.length === 0 && (
+                    <p className="mt-2 text-center text-xs text-red-500">
+                      Add slides before starting
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
 
   if (!currentSlide) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-beige-50 text-charcoal-900">
+      <div className="flex min-h-screen items-center justify-center bg-beige-50">
         <p className="text-taupe-400">No slides in this presentation</p>
       </div>
     )
   }
 
+  // ── Active presentation ──────────────────────────────────────────
   return (
     <div className="flex min-h-screen flex-col bg-beige-50 text-charcoal-900">
       {/* Top bar */}
-      <div className="flex shrink-0 items-center justify-between border-b border-beige-200 bg-white/90 px-6 py-3">
+      <div className="flex shrink-0 items-center justify-between border-b border-beige-200 bg-white px-6 py-3">
         <div className="flex items-center gap-4">
-          <span className="rounded bg-beige-100 px-3 py-1 font-mono text-sm text-clay-600">
-            {presentation.join_code}
+          {/* Mini QR popover */}
+          <div className="group relative">
+            <button className="flex items-center gap-2 rounded-lg border border-beige-200 bg-beige-50 px-3 py-1.5 text-sm font-mono font-semibold text-clay-600 transition-colors hover:bg-beige-100">
+              {presentation.join_code}
+            </button>
+            {joinUrl && (
+              <div className="absolute left-0 top-full z-50 mt-2 hidden rounded-xl border border-beige-200 bg-white p-3 shadow-lg group-hover:block">
+                <QRCodeSVG
+                  value={joinUrl}
+                  size={120}
+                  bgColor="#ffffff"
+                  fgColor="#2a2520"
+                  level="M"
+                />
+                <p className="mt-2 text-center text-[10px] text-taupe-400">{joinBase}</p>
+              </div>
+            )}
+          </div>
+          <span className="text-sm text-taupe-400">
+            👥 {participantCount}
           </span>
-          <span className="text-sm text-taupe-400">👥 {participantCount}</span>
           <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
             ● Live
           </span>
@@ -198,22 +297,23 @@ export default function PresenterView({ presentation, slides }: Props) {
           <button
             onClick={endSession}
             disabled={working}
-            className="rounded-lg bg-red-100 px-4 py-1.5 text-sm text-red-700 transition-colors hover:bg-red-200 disabled:opacity-40"
+            className="rounded-lg border border-red-200 bg-red-50 px-4 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-100 disabled:opacity-40"
           >
             End Session
           </button>
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Slide + Results */}
       <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
-        {/* Slide panel */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-10 p-10 lg:p-16">
+        {/* Question panel */}
+        <div className="flex flex-1 flex-col items-center justify-center gap-8 p-10 lg:p-16">
           <div className="w-full max-w-2xl space-y-8">
-            <span className="text-xs tracking-widest text-taupe-400 uppercase">
-              {currentSlide.type === "poll" ? "Poll" : "Open-ended"}
+            <span className="text-xs font-medium tracking-widest text-taupe-400 uppercase">
+              {currentSlide.type === "poll" ? "Poll" : "Open-ended"} · Slide{" "}
+              {currentSlideIndex + 1}
             </span>
-            <h1 className="font-serif text-4xl leading-tight font-light text-charcoal-900 lg:text-5xl">
+            <h1 className="font-serif text-4xl font-light leading-tight text-charcoal-900 lg:text-5xl">
               {currentSlide.question}
             </h1>
             {currentSlide.type === "poll" && currentSlide.options && (
@@ -221,9 +321,9 @@ export default function PresenterView({ presentation, slides }: Props) {
                 {currentSlide.options.map((opt, i) => (
                   <li
                     key={i}
-                    className="flex items-center gap-4 text-xl text-espresso-800"
+                    className="flex items-center gap-4 text-lg text-espresso-800"
                   >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-beige-300 font-mono text-sm text-taupe-400">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-beige-300 font-mono text-sm text-taupe-400">
                       {String.fromCharCode(65 + i)}
                     </span>
                     {opt}
@@ -235,9 +335,9 @@ export default function PresenterView({ presentation, slides }: Props) {
         </div>
 
         {/* Results panel */}
-        <div className="flex w-full shrink-0 flex-col overflow-hidden border-t border-beige-200 bg-beige-100/50 lg:w-[380px] lg:border-t-0 lg:border-l">
+        <div className="flex w-full shrink-0 flex-col overflow-hidden border-t border-beige-200 bg-beige-100/60 lg:w-[360px] lg:border-t-0 lg:border-l">
           <div className="border-b border-beige-200 px-6 py-4">
-            <p className="text-xs tracking-widest text-taupe-400 uppercase">
+            <p className="text-xs font-medium tracking-widest text-taupe-400 uppercase">
               Live Results
             </p>
           </div>
@@ -251,12 +351,12 @@ export default function PresenterView({ presentation, slides }: Props) {
         </div>
       </div>
 
-      {/* Bottom navigation */}
-      <div className="flex shrink-0 items-center justify-between border-t border-beige-200 bg-white/90 px-6 py-4">
+      {/* Bottom nav */}
+      <div className="flex shrink-0 items-center justify-between border-t border-beige-200 bg-white px-6 py-4">
         <button
           onClick={() => goTo(currentSlideIndex - 1)}
           disabled={isFirst || working}
-          className="rounded-lg border border-beige-300 px-6 py-2.5 text-sm font-medium text-clay-600 transition-colors hover:bg-beige-100 disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-xl border border-beige-200 px-6 py-2.5 text-sm font-medium text-espresso-800 transition-colors hover:bg-beige-100 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           ← Prev
         </button>
@@ -269,7 +369,7 @@ export default function PresenterView({ presentation, slides }: Props) {
               className={`h-2.5 w-2.5 rounded-full transition-colors ${
                 i === currentSlideIndex
                   ? "bg-clay-500"
-                  : "hover:bg-clay-300 bg-beige-300"
+                  : "bg-beige-300 hover:bg-taupe-400"
               }`}
             />
           ))}
@@ -277,7 +377,7 @@ export default function PresenterView({ presentation, slides }: Props) {
         <button
           onClick={() => goTo(currentSlideIndex + 1)}
           disabled={isLast || working}
-          className="rounded-lg border border-beige-300 px-6 py-2.5 text-sm font-medium text-clay-600 transition-colors hover:bg-beige-100 disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-xl bg-clay-500 px-6 py-2.5 text-sm font-medium text-beige-50 transition-colors hover:bg-clay-600 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           Next →
         </button>
