@@ -21,6 +21,11 @@
   --color-espresso-700: #524639;
   --color-espresso-800: #3d352e;
   --color-charcoal-900: #2a2520;
+  --color-chart-1: #7d6b5a;
+  --color-chart-2: #665847;
+  --color-chart-3: #524639;
+  --color-chart-4: #3d352e;
+  --color-chart-5: #9c8b7a;
 
   /* Semantic colors */
   --color-background: var(--beige-50);
@@ -59,6 +64,11 @@
   --espresso-700: #524639;
   --espresso-800: #3d352e;
   --charcoal-900: #2a2520;
+  --color-chart-1: #7d6b5a;
+  --color-chart-2: #665847;
+  --color-chart-3: #524639;
+  --color-chart-4: #3d352e;
+  --color-chart-5: #9c8b7a;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(61 53 46 / 0.05);
