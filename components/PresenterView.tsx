@@ -155,8 +155,8 @@ export default function PresenterView({ presentation, slides }: Props) {
   const isFirst = currentSlideIndex === 0
   const isLast = currentSlideIndex === slides.length - 1
   const joinBase = joinUrl
-    ? new URL(joinUrl).origin.replace(/^https?:\/\//, "")
-    : "menti.talentmucho.com"
+    ? `${new URL(joinUrl).origin.replace(/^https?:\/\//, "")}/join`
+    : "menti.talentmucho.com/join"
 
   // ── Lobby ────────────────────────────────────────────────────────
   if (!isActive) {
