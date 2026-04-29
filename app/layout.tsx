@@ -1,14 +1,20 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google"
+import { Cormorant_Garamond, Manrope } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'})
-
-const fontMono = Geist_Mono({
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
-  variable: "--font-mono",
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+})
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  display: "swap",
 })
 
 export default function RootLayout({
@@ -20,7 +26,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable)}
+      className={cn("antialiased", cormorant.variable, manrope.variable)}
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>
