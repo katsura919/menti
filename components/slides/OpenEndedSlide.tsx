@@ -23,31 +23,33 @@ export default function OpenEndedSlide({ slide, onSubmit, disabled }: Props) {
 
   if (disabled) {
     return (
-      <div className="w-full max-w-lg space-y-4 text-center">
-        <h2 className="text-xl font-semibold">{slide.question}</h2>
-        <p className="text-muted-foreground">Response recorded ✓</p>
+      <div className="w-full space-y-4 text-center">
+        <h2 className="text-xl font-semibold leading-snug">{slide.question}</h2>
+        <div className="inline-flex items-center gap-2 rounded-full bg-green-100 dark:bg-green-900/30 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-400">
+          <span>✓</span> Response recorded
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-lg space-y-4">
-      <h2 className="text-xl font-semibold text-center">{slide.question}</h2>
+    <div className="w-full space-y-5">
+      <h2 className="text-xl font-semibold leading-snug text-center">{slide.question}</h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         <textarea
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Type your answer..."
-          rows={4}
+          rows={5}
           maxLength={500}
-          className="w-full px-3 py-2 border rounded-lg bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+          className="w-full px-3 py-3 border rounded-lg bg-background text-foreground text-base resize-none focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <div className="flex justify-between items-center">
           <span className="text-xs text-muted-foreground">{answer.length}/500</span>
           <button
             type="submit"
             disabled={!answer.trim() || submitting}
-            className="py-2 px-6 bg-primary text-primary-foreground rounded-lg font-medium disabled:opacity-50 transition-opacity"
+            className="min-h-[48px] py-3 px-8 bg-primary text-primary-foreground rounded-lg font-medium text-base disabled:opacity-50 transition-opacity active:scale-[0.98]"
           >
             {submitting ? 'Submitting...' : 'Submit'}
           </button>

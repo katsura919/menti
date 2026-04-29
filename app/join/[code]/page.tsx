@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useMemo, useState, useCallback, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Presentation, Slide, Participant } from '@/lib/types'
 import PollSlide from '@/components/slides/PollSlide'
@@ -41,12 +42,13 @@ function AudienceView() {
 
   const registerParticipant = useCallback(
     async (presentationId: string, sessionId: string): Promise<Participant> => {
+      // Re-join: return existing participant for this session
       const { data: existing } = await supabase
         .from('participants')
         .select('*')
         .eq('presentation_id', presentationId)
         .eq('session_id', sessionId)
-        .single()
+        .maybeSingle()
 
       if (existing) return existing
 
@@ -164,17 +166,50 @@ function AudienceView() {
   const currentSlide = slides[currentSlideIndex] ?? null
   const alreadyAnswered = currentSlide ? answeredSlides.has(currentSlide.id) : false
 
-  if (status === 'loading') return <Screen>Joining...</Screen>
+  if (status === 'loading') {
+    return (
+      <Screen>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Joining...</p>
+        </div>
+      </Screen>
+    )
+  }
 
-  if (status === 'error') return <Screen>{errorMsg || 'Something went wrong'}</Screen>
+  if (status === 'error') {
+    return (
+      <Screen>
+        <div className="space-y-3 text-center">
+          <p className="text-lg font-medium">{errorMsg || 'Something went wrong'}</p>
+          <Link
+            href="/join"
+            className="inline-block text-sm text-primary underline underline-offset-4"
+          >
+            Try another code
+          </Link>
+        </div>
+      </Screen>
+    )
+  }
 
   if (status === 'waiting') {
     return (
       <Screen>
-        <div className="text-center space-y-2">
-          <div className="text-4xl">⏳</div>
-          <h2 className="text-xl font-semibold">Waiting for session to start</h2>
-          <p className="text-muted-foreground">The presenter will begin shortly</p>
+        <div className="flex flex-col items-center gap-4 text-center max-w-xs">
+          <div className="relative">
+            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+              <div className="w-4 h-4 rounded-full bg-primary animate-pulse" />
+            </div>
+            <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping opacity-50" />
+          </div>
+          {presentation && (
+            <p className="font-semibold text-lg leading-tight">{presentation.title}</p>
+          )}
+          <p className="text-muted-foreground text-sm">Waiting for session to start</p>
+          <span className="font-mono text-xs bg-muted px-3 py-1 rounded-full text-muted-foreground">
+            {code}
+          </span>
         </div>
       </Screen>
     )
@@ -183,10 +218,21 @@ function AudienceView() {
   if (status === 'ended') {
     return (
       <Screen>
-        <div className="text-center space-y-2">
-          <div className="text-4xl">✓</div>
-          <h2 className="text-xl font-semibold">Session ended</h2>
-          <p className="text-muted-foreground">Thanks for participating!</p>
+        <div className="flex flex-col items-center gap-4 text-center max-w-xs">
+          <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-2xl">
+            ✓
+          </div>
+          {presentation && (
+            <p className="font-semibold text-lg leading-tight">{presentation.title}</p>
+          )}
+          <p className="font-medium">Session ended</p>
+          <p className="text-muted-foreground text-sm">Thanks for participating!</p>
+          <Link
+            href="/join"
+            className="mt-2 text-sm text-primary underline underline-offset-4"
+          >
+            Join another session
+          </Link>
         </div>
       </Screen>
     )
@@ -195,35 +241,45 @@ function AudienceView() {
   if (!currentSlide) return <Screen>No slides in this presentation</Screen>
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="p-4 border-b flex items-center justify-between">
+    <div className="min-h-[100dvh] bg-background flex flex-col">
+      <header className="px-4 py-3 border-b flex items-center justify-between shrink-0">
         <span className="font-mono text-sm text-muted-foreground">{code}</span>
         <span className="text-sm text-muted-foreground">
           {currentSlideIndex + 1} / {slides.length}
         </span>
       </header>
-      <main className="flex-1 flex items-center justify-center p-6">
-        {currentSlide.type === 'poll' ? (
-          <PollSlide slide={currentSlide} onSubmit={handleSubmit} disabled={alreadyAnswered} />
-        ) : (
-          <OpenEndedSlide slide={currentSlide} onSubmit={handleSubmit} disabled={alreadyAnswered} />
-        )}
+      <main className="flex-1 flex items-center justify-center px-4 py-6 sm:px-6">
+        <div className="w-full max-w-lg">
+          {currentSlide.type === 'poll' ? (
+            <PollSlide slide={currentSlide} onSubmit={handleSubmit} disabled={alreadyAnswered} />
+          ) : (
+            <OpenEndedSlide slide={currentSlide} onSubmit={handleSubmit} disabled={alreadyAnswered} />
+          )}
+        </div>
       </main>
+      {/* iOS home indicator spacing */}
+      <div className="h-safe-area-inset-bottom shrink-0 pb-4" />
     </div>
   )
 }
 
 function Screen({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center p-6">{children}</div>
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background p-6">
+      {children}
     </div>
   )
 }
 
 export default function AudiencePage() {
   return (
-    <Suspense fallback={<Screen>Loading...</Screen>}>
+    <Suspense
+      fallback={
+        <div className="min-h-[100dvh] flex items-center justify-center bg-background">
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      }
+    >
       <AudienceView />
     </Suspense>
   )

@@ -22,22 +22,24 @@ export default function PollSlide({ slide, onSubmit, disabled }: Props) {
 
   if (disabled) {
     return (
-      <div className="w-full max-w-lg space-y-4 text-center">
-        <h2 className="text-xl font-semibold">{slide.question}</h2>
-        <p className="text-muted-foreground">Response recorded ✓</p>
+      <div className="w-full space-y-4 text-center">
+        <h2 className="text-xl font-semibold leading-snug">{slide.question}</h2>
+        <div className="inline-flex items-center gap-2 rounded-full bg-green-100 dark:bg-green-900/30 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-400">
+          <span>✓</span> Response recorded
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="w-full max-w-lg space-y-4">
-      <h2 className="text-xl font-semibold text-center">{slide.question}</h2>
+    <div className="w-full space-y-5">
+      <h2 className="text-xl font-semibold leading-snug text-center">{slide.question}</h2>
       <div className="space-y-2">
         {(slide.options ?? []).map((option) => (
           <button
             key={option}
             onClick={() => setSelected(option)}
-            className={`w-full px-4 py-3 rounded-lg border text-left transition-colors ${
+            className={`w-full min-h-[52px] px-4 py-3 rounded-lg border text-left text-base transition-colors active:scale-[0.98] ${
               selected === option
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-background hover:bg-accent border-border'
@@ -50,7 +52,7 @@ export default function PollSlide({ slide, onSubmit, disabled }: Props) {
       <button
         onClick={handleSubmit}
         disabled={!selected || submitting}
-        className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-lg font-medium disabled:opacity-50 transition-opacity"
+        className="w-full min-h-[52px] py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium text-base disabled:opacity-50 transition-opacity active:scale-[0.98]"
       >
         {submitting ? 'Submitting...' : 'Submit'}
       </button>
