@@ -15,12 +15,21 @@ export default async function AdminLayout({
   if (!user) redirect('/auth/login')
 
   return (
-    <div className="min-h-svh">
-      <header className="flex items-center justify-between border-b px-6 py-3">
-        <span className="font-semibold">Menti</span>
-        <LogoutButton />
+    <div className="min-h-svh bg-beige-50">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-beige-200 bg-white shadow-sm">
+        <div className="section-container flex items-center justify-between py-4">
+          <h1 className="font-serif text-2xl font-light tracking-tight text-charcoal-900">
+            Menti
+          </h1>
+          <LogoutButton />
+        </div>
       </header>
-      <main className="p-6">{children}</main>
+
+      {/* Main */}
+      <main className="section-container py-8">
+        {children}
+      </main>
     </div>
   )
 }
