@@ -1,11 +1,10 @@
-'use client'
+"use client"
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import PollResults from '@/components/slides/PollResults'
-import OpenEndedResults from '@/components/slides/OpenEndedResults'
-import type { Presentation, Slide, Response } from '@/lib/types'
+import { useEffect, useMemo, useRef, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
+import PollResults from "@/components/slides/PollResults"
+import OpenEndedResults from "@/components/slides/OpenEndedResults"
+import type { Presentation, Slide, Response } from "@/lib/types"
 
 interface Props {
   presentation: Presentation
@@ -15,7 +14,9 @@ interface Props {
 export default function PresenterView({ presentation, slides }: Props) {
   const supabase = useMemo(() => createClient(), [])
 
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(presentation.current_slide_index)
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(
+    presentation.current_slide_index
+  )
   const [isActive, setIsActive] = useState(presentation.is_active)
   const [responses, setResponses] = useState<Response[]>([])
   const [participantCount, setParticipantCount] = useState(0)
@@ -26,31 +27,27 @@ export default function PresenterView({ presentation, slides }: Props) {
 
   const currentSlide: Slide | null = slides[currentSlideIndex] ?? null
 
-  // Fetch responses for a given slide
   async function fetchResponses(slideId: string) {
     const { data } = await supabase
-      .from('responses')
-      .select('*')
-      .eq('slide_id', slideId)
-      .order('created_at', { ascending: true })
+      .from("responses")
+      .select("*")
+      .eq("slide_id", slideId)
+      .order("created_at", { ascending: true })
     setResponses(data ?? [])
   }
 
-  // Initial load: participant count + responses
   useEffect(() => {
     async function init() {
       const { count } = await supabase
-        .from('participants')
-        .select('*', { count: 'exact', head: true })
-        .eq('presentation_id', presentation.id)
+        .from("participants")
+        .select("*", { count: "exact", head: true })
+        .eq("presentation_id", presentation.id)
       setParticipantCount(count ?? 0)
-
       if (currentSlide) await fetchResponses(currentSlide.id)
     }
     init()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-fetch responses when slide changes
   useEffect(() => {
     if (currentSlide) fetchResponses(currentSlide.id)
     else setResponses([])
@@ -68,8 +65,8 @@ export default function PresenterView({ presentation, slides }: Props) {
     const channel = supabase
       .channel(`presenter-responses-${presentation.id}`)
       .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'responses' },
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "responses" },
         (payload) => {
           const r = payload.new as Response
           const activeSlide = slides[currentSlideIndexRef.current]
@@ -79,8 +76,9 @@ export default function PresenterView({ presentation, slides }: Props) {
         }
       )
       .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [supabase, presentation.id, slides])
 
   // Realtime: participant count
@@ -88,11 +86,11 @@ export default function PresenterView({ presentation, slides }: Props) {
     const channel = supabase
       .channel(`presenter-participants-${presentation.id}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'participants',
+          event: "INSERT",
+          schema: "public",
+          table: "participants",
           filter: `presentation_id=eq.${presentation.id}`,
         },
         () => {
@@ -100,16 +98,17 @@ export default function PresenterView({ presentation, slides }: Props) {
         }
       )
       .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [supabase, presentation.id])
 
   async function startSession() {
     setWorking(true)
     await supabase
-      .from('presentations')
+      .from("presentations")
       .update({ is_active: true, current_slide_index: 0 })
-      .eq('id', presentation.id)
+      .eq("id", presentation.id)
     setIsActive(true)
     setCurrentSlideIndex(0)
     setWorking(false)
@@ -118,9 +117,9 @@ export default function PresenterView({ presentation, slides }: Props) {
   async function endSession() {
     setWorking(true)
     await supabase
-      .from('presentations')
+      .from("presentations")
       .update({ is_active: false })
-      .eq('id', presentation.id)
+      .eq("id", presentation.id)
     setIsActive(false)
     setWorking(false)
   }
@@ -128,9 +127,9 @@ export default function PresenterView({ presentation, slides }: Props) {
   async function goTo(index: number) {
     setWorking(true)
     await supabase
-      .from('presentations')
+      .from("presentations")
       .update({ current_slide_index: index })
-      .eq('id', presentation.id)
+      .eq("id", presentation.id)
     setCurrentSlideIndex(index)
     setWorking(false)
   }
@@ -138,116 +137,151 @@ export default function PresenterView({ presentation, slides }: Props) {
   const isFirst = currentSlideIndex === 0
   const isLast = currentSlideIndex === slides.length - 1
 
+  // Lobby: session not started
+  if (!isActive) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-beige-50 p-8 text-charcoal-900">
+        <p className="text-sm font-medium text-taupe-400">
+          {presentation.title}
+        </p>
+        <div className="space-y-3 text-center">
+          <p className="text-xs tracking-widest text-taupe-400 uppercase">
+            Join code
+          </p>
+          <p className="font-mono text-8xl font-bold tracking-widest text-clay-600">
+            {presentation.join_code}
+          </p>
+        </div>
+        <p className="text-sm text-taupe-400">
+          👥 {participantCount} participant{participantCount !== 1 ? "s" : ""}{" "}
+          waiting
+        </p>
+        <button
+          onClick={startSession}
+          disabled={working || slides.length === 0}
+          className="mt-2 rounded-full bg-clay-500 px-10 py-3 text-base font-semibold text-beige-50 transition-colors hover:bg-clay-600 disabled:opacity-40"
+        >
+          {working ? "Starting..." : "Start Session"}
+        </button>
+        {slides.length === 0 && (
+          <p className="text-sm text-red-400">Add slides before starting</p>
+        )}
+      </div>
+    )
+  }
+
+  if (!currentSlide) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-beige-50 text-charcoal-900">
+        <p className="text-taupe-400">No slides in this presentation</p>
+      </div>
+    )
+  }
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header bar */}
-      <div className="flex items-center justify-between rounded-lg border p-4">
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-sm bg-muted px-2 py-1 rounded">
+    <div className="flex min-h-screen flex-col bg-beige-50 text-charcoal-900">
+      {/* Top bar */}
+      <div className="flex shrink-0 items-center justify-between border-b border-beige-200 bg-white/90 px-6 py-3">
+        <div className="flex items-center gap-4">
+          <span className="rounded bg-beige-100 px-3 py-1 font-mono text-sm text-clay-600">
             {presentation.join_code}
           </span>
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-              isActive
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                : 'bg-muted text-muted-foreground'
-            }`}
-          >
-            {isActive ? 'Live' : 'Not started'}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            👥 {participantCount}
+          <span className="text-sm text-taupe-400">👥 {participantCount}</span>
+          <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+            ● Live
           </span>
         </div>
-
-        <div className="flex gap-2">
-          {!isActive ? (
-            <Button onClick={startSession} disabled={working || slides.length === 0}>
-              Start session
-            </Button>
-          ) : (
-            <Button variant="destructive" onClick={endSession} disabled={working}>
-              End session
-            </Button>
-          )}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-taupe-400">
+            {currentSlideIndex + 1} / {slides.length}
+          </span>
+          <button
+            onClick={endSession}
+            disabled={working}
+            className="rounded-lg bg-red-100 px-4 py-1.5 text-sm text-red-700 transition-colors hover:bg-red-200 disabled:opacity-40"
+          >
+            End Session
+          </button>
         </div>
       </div>
 
-      {slides.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No slides. Add slides before presenting.</p>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Slide navigator */}
-          <div className="rounded-lg border p-6 space-y-4">
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span>Slide {currentSlideIndex + 1} of {slides.length}</span>
-              <span className="capitalize text-xs bg-muted px-2 py-0.5 rounded">
-                {currentSlide?.type === 'poll' ? 'Poll' : 'Open ended'}
-              </span>
-            </div>
-
-            {currentSlide && (
-              <p className="text-lg font-medium leading-snug">{currentSlide.question}</p>
-            )}
-
-            {currentSlide?.type === 'poll' && currentSlide.options && (
-              <ul className="space-y-1">
+      {/* Main content */}
+      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
+        {/* Slide panel */}
+        <div className="flex flex-1 flex-col items-center justify-center gap-10 p-10 lg:p-16">
+          <div className="w-full max-w-2xl space-y-8">
+            <span className="text-xs tracking-widest text-taupe-400 uppercase">
+              {currentSlide.type === "poll" ? "Poll" : "Open-ended"}
+            </span>
+            <h1 className="font-serif text-4xl leading-tight font-light text-charcoal-900 lg:text-5xl">
+              {currentSlide.question}
+            </h1>
+            {currentSlide.type === "poll" && currentSlide.options && (
+              <ul className="space-y-3 pt-2">
                 {currentSlide.options.map((opt, i) => (
-                  <li key={i} className="text-sm text-muted-foreground pl-3 border-l-2">
+                  <li
+                    key={i}
+                    className="flex items-center gap-4 text-xl text-espresso-800"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-beige-300 font-mono text-sm text-taupe-400">
+                      {String.fromCharCode(65 + i)}
+                    </span>
                     {opt}
                   </li>
                 ))}
               </ul>
             )}
-
-            {/* Navigation */}
-            <div className="flex gap-2 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => goTo(currentSlideIndex - 1)}
-                disabled={isFirst || working || !isActive}
-                className="flex-1"
-              >
-                ← Prev
-              </Button>
-              <Button
-                onClick={() => goTo(currentSlideIndex + 1)}
-                disabled={isLast || working || !isActive}
-                className="flex-1"
-              >
-                Next →
-              </Button>
-            </div>
-
-            {/* Slide thumbnail list */}
-            <div className="flex gap-1 flex-wrap pt-1">
-              {slides.map((s, i) => (
-                <button
-                  key={s.id}
-                  onClick={() => isActive && goTo(i)}
-                  disabled={!isActive || working}
-                  className={`w-7 h-7 text-xs rounded font-mono transition-colors ${
-                    i === currentSlideIndex
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted hover:bg-muted/80 text-muted-foreground'
-                  } disabled:pointer-events-none`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Live results */}
-          <div className="rounded-lg border p-6">
-            {currentSlide?.type === 'poll' ? (
-              <PollResults slide={currentSlide} responses={responses} />
-            ) : currentSlide?.type === 'open_ended' ? (
-              <OpenEndedResults slide={currentSlide} responses={responses} />
-            ) : null}
           </div>
         </div>
-      )}
+
+        {/* Results panel */}
+        <div className="flex w-full shrink-0 flex-col overflow-hidden border-t border-beige-200 bg-beige-100/50 lg:w-[380px] lg:border-t-0 lg:border-l">
+          <div className="border-b border-beige-200 px-6 py-4">
+            <p className="text-xs tracking-widest text-taupe-400 uppercase">
+              Live Results
+            </p>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6">
+            {currentSlide.type === "poll" ? (
+              <PollResults slide={currentSlide} responses={responses} />
+            ) : (
+              <OpenEndedResults slide={currentSlide} responses={responses} />
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom navigation */}
+      <div className="flex shrink-0 items-center justify-between border-t border-beige-200 bg-white/90 px-6 py-4">
+        <button
+          onClick={() => goTo(currentSlideIndex - 1)}
+          disabled={isFirst || working}
+          className="rounded-lg border border-beige-300 px-6 py-2.5 text-sm font-medium text-clay-600 transition-colors hover:bg-beige-100 disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          ← Prev
+        </button>
+        <div className="flex gap-2">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              disabled={working}
+              className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                i === currentSlideIndex
+                  ? "bg-clay-500"
+                  : "hover:bg-clay-300 bg-beige-300"
+              }`}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => goTo(currentSlideIndex + 1)}
+          disabled={isLast || working}
+          className="rounded-lg border border-beige-300 px-6 py-2.5 text-sm font-medium text-clay-600 transition-colors hover:bg-beige-100 disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          Next →
+        </button>
+      </div>
     </div>
   )
 }
