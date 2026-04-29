@@ -126,12 +126,18 @@ function AudienceView() {
           schema: 'public',
           table: 'presentations',
         },
-        (payload) => {
+        async (payload) => {
           const updated = payload.new as Presentation
           if (updated.id !== presentation.id) return
           setCurrentSlideIndex(updated.current_slide_index)
 
           if (updated.is_active && statusRef.current === 'waiting') {
+            const { data: slidesData } = await supabase
+              .from('slides')
+              .select('*')
+              .eq('presentation_id', presentation.id)
+              .order('order_index')
+            if (slidesData?.length) setSlides(slidesData)
             setStatus('active')
           }
           if (!updated.is_active && statusRef.current === 'active') {
@@ -148,7 +154,7 @@ function AudienceView() {
 
   // Polling fallback: Realtime can silently miss UPDATE events
   useEffect(() => {
-    if (status !== 'waiting' || !presentation) return
+    if ((status !== 'waiting' && status !== 'active') || !presentation) return
 
     const interval = setInterval(async () => {
       const { data } = await supabase
@@ -157,9 +163,20 @@ function AudienceView() {
         .eq('id', presentation.id)
         .single()
 
-      if (data?.is_active) {
+      if (!data) return
+
+      if (data.is_active && statusRef.current === 'waiting') {
+        const { data: slidesData } = await supabase
+          .from('slides')
+          .select('*')
+          .eq('presentation_id', presentation.id)
+          .order('order_index')
+        if (slidesData?.length) setSlides(slidesData)
         setCurrentSlideIndex(data.current_slide_index)
         setStatus('active')
+      } else if (statusRef.current === 'active') {
+        setCurrentSlideIndex(data.current_slide_index)
+        if (!data.is_active) setStatus('ended')
       }
     }, 3000)
 

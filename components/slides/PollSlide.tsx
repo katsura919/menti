@@ -10,13 +10,13 @@ interface Props {
 }
 
 export default function PollSlide({ slide, onSubmit, disabled }: Props) {
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   async function handleSubmit() {
-    if (!selected || submitting) return
+    if (selectedIndex === null || submitting) return
     setSubmitting(true)
-    await onSubmit(selected)
+    await onSubmit((slide.options ?? [])[selectedIndex])
     setSubmitting(false)
   }
 
@@ -35,12 +35,12 @@ export default function PollSlide({ slide, onSubmit, disabled }: Props) {
     <div className="w-full space-y-5">
       <h2 className="text-xl font-semibold leading-snug text-center">{slide.question}</h2>
       <div className="space-y-2">
-        {(slide.options ?? []).map((option) => (
+        {(slide.options ?? []).map((option, i) => (
           <button
-            key={option}
-            onClick={() => setSelected(option)}
+            key={i}
+            onClick={() => setSelectedIndex(i)}
             className={`w-full min-h-[52px] px-4 py-3 rounded-lg border text-left text-base transition-colors active:scale-[0.98] ${
-              selected === option
+              selectedIndex === i
                 ? 'bg-primary text-primary-foreground border-primary'
                 : 'bg-background hover:bg-accent border-border'
             }`}
@@ -51,7 +51,7 @@ export default function PollSlide({ slide, onSubmit, disabled }: Props) {
       </div>
       <button
         onClick={handleSubmit}
-        disabled={!selected || submitting}
+        disabled={selectedIndex === null || submitting}
         className="w-full min-h-[52px] py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium text-base disabled:opacity-50 transition-opacity active:scale-[0.98]"
       >
         {submitting ? 'Submitting...' : 'Submit'}

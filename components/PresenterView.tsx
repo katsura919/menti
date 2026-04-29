@@ -56,6 +56,13 @@ export default function PresenterView({ presentation, slides }: Props) {
     else setResponses([])
   }, [currentSlideIndex]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Polling fallback for live responses
+  useEffect(() => {
+    if (!isActive || !currentSlide) return
+    const interval = setInterval(() => fetchResponses(currentSlide.id), 3000)
+    return () => clearInterval(interval)
+  }, [isActive, currentSlideIndex]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Realtime: new responses
   useEffect(() => {
     const channel = supabase
