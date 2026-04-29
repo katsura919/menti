@@ -176,6 +176,25 @@
   .divider {
     @apply mx-auto my-8 h-px w-16 bg-beige-300;
   }
+
+  .scrollbar-brown {
+    scrollbar-width: thin;
+    scrollbar-color: var(--clay-500) var(--beige-200);
+  }
+  .scrollbar-brown::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scrollbar-brown::-webkit-scrollbar-track {
+    background: var(--beige-200);
+    border-radius: 999px;
+  }
+  .scrollbar-brown::-webkit-scrollbar-thumb {
+    background: var(--clay-500);
+    border-radius: 999px;
+  }
+  .scrollbar-brown::-webkit-scrollbar-thumb:hover {
+    background: var(--clay-600);
+  }
 }
 
 /* ===== ANIMATIONS ===== */

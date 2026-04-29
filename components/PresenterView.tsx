@@ -1,11 +1,23 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from "react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Radio,
+  Square,
+  Users,
+} from "lucide-react"
 import { QRCodeSVG } from "qrcode.react"
 import { createClient } from "@/lib/supabase/client"
 import PollResults from "@/components/slides/PollResults"
 import OpenEndedResults from "@/components/slides/OpenEndedResults"
 import type { Presentation, Slide, Response } from "@/lib/types"
+
+export type ResponseWithParticipant = Response & {
+  participant: { display_name: string | null } | null
+}
 
 interface Props {
   presentation: Presentation
@@ -19,7 +31,7 @@ export default function PresenterView({ presentation, slides }: Props) {
     presentation.current_slide_index
   )
   const [isActive, setIsActive] = useState(presentation.is_active)
-  const [responses, setResponses] = useState<Response[]>([])
+  const [responses, setResponses] = useState<ResponseWithParticipant[]>([])
   const [participantCount, setParticipantCount] = useState(0)
   const [working, setWorking] = useState(false)
   const [joinUrl, setJoinUrl] = useState("")
@@ -36,10 +48,10 @@ export default function PresenterView({ presentation, slides }: Props) {
   async function fetchResponses(slideId: string) {
     const { data } = await supabase
       .from("responses")
-      .select("*")
+      .select("*, participant:participants(display_name)")
       .eq("slide_id", slideId)
       .order("created_at", { ascending: true })
-    setResponses(data ?? [])
+    setResponses((data as ResponseWithParticipant[]) ?? [])
   }
 
   useEffect(() => {
@@ -74,7 +86,7 @@ export default function PresenterView({ presentation, slides }: Props) {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "responses" },
         (payload) => {
-          const r = payload.new as Response
+          const r = { ...(payload.new as Response), participant: null } as ResponseWithParticipant
           const activeSlide = slides[currentSlideIndexRef.current]
           if (activeSlide && r.slide_id === activeSlide.id) {
             setResponses((prev) => [...prev, r])
@@ -163,7 +175,7 @@ export default function PresenterView({ presentation, slides }: Props) {
             </span>
           </div>
           <div className="flex items-center gap-2 text-sm text-taupe-400">
-            <span className="inline-block h-2 w-2 rounded-full bg-taupe-400" />
+            <Users className="h-4 w-4" />
             {participantCount} joined
           </div>
         </div>
@@ -194,12 +206,12 @@ export default function PresenterView({ presentation, slides }: Props) {
               </div>
 
               {/* Divider */}
-              <div className="flex items-center justify-center md:py-10">
+              {/* <div className="flex items-center justify-center md:py-10">
                 <div className="h-px w-full bg-beige-200 md:h-full md:w-px" />
                 <span className="absolute bg-white px-2 py-1 text-xs font-medium text-taupe-400 md:static md:px-0 md:py-2">
                   or
                 </span>
-              </div>
+              </div> */}
 
               {/* Code side */}
               <div className="flex flex-1 flex-col justify-center gap-6 p-10">
@@ -220,11 +232,11 @@ export default function PresenterView({ presentation, slides }: Props) {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-taupe-400">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                  </svg>
+                  <Users className="h-4 w-4" />
                   <span>
-                    <strong className="font-semibold text-charcoal-900">{participantCount}</strong>{" "}
+                    <strong className="font-semibold text-charcoal-900">
+                      {participantCount}
+                    </strong>{" "}
                     participant{participantCount !== 1 ? "s" : ""} waiting
                   </span>
                 </div>
@@ -235,7 +247,10 @@ export default function PresenterView({ presentation, slides }: Props) {
                     disabled={working || slides.length === 0}
                     className="w-full rounded-xl bg-clay-500 py-3.5 text-base font-semibold text-beige-50 transition-colors hover:bg-clay-600 disabled:opacity-40"
                   >
-                    {working ? "Starting..." : "Start Session →"}
+                    <span className="inline-flex items-center gap-2">
+                      <Play className="h-4 w-4" />
+                      {working ? "Starting..." : "Start Session"}
+                    </span>
                   </button>
                   {slides.length === 0 && (
                     <p className="mt-2 text-center text-xs text-red-500">
@@ -261,17 +276,17 @@ export default function PresenterView({ presentation, slides }: Props) {
 
   // ── Active presentation ──────────────────────────────────────────
   return (
-    <div className="flex min-h-screen flex-col bg-beige-50 text-charcoal-900">
+    <div className="flex h-screen flex-col bg-beige-50 text-charcoal-900">
       {/* Top bar */}
       <div className="flex shrink-0 items-center justify-between border-b border-beige-200 bg-white px-6 py-3">
         <div className="flex items-center gap-4">
           {/* Mini QR popover */}
           <div className="group relative">
-            <button className="flex items-center gap-2 rounded-lg border border-beige-200 bg-beige-50 px-3 py-1.5 text-sm font-mono font-semibold text-clay-600 transition-colors hover:bg-beige-100">
+            <button className="flex items-center gap-2 rounded-lg border border-beige-200 bg-beige-50 px-3 py-1.5 font-mono text-sm font-semibold text-clay-600 transition-colors hover:bg-beige-100">
               {presentation.join_code}
             </button>
             {joinUrl && (
-              <div className="absolute left-0 top-full z-50 mt-2 hidden rounded-xl border border-beige-200 bg-white p-3 shadow-lg group-hover:block">
+              <div className="absolute top-full left-0 z-50 mt-2 hidden rounded-xl border border-beige-200 bg-white p-3 shadow-lg group-hover:block">
                 <QRCodeSVG
                   value={joinUrl}
                   size={120}
@@ -279,15 +294,21 @@ export default function PresenterView({ presentation, slides }: Props) {
                   fgColor="#2a2520"
                   level="M"
                 />
-                <p className="mt-2 text-center text-[10px] text-taupe-400">{joinBase}</p>
+                <p className="mt-2 text-center text-[10px] text-taupe-400">
+                  {joinBase}
+                </p>
               </div>
             )}
           </div>
           <span className="text-sm text-taupe-400">
-            👥 {participantCount}
+            <span className="inline-flex items-center gap-1.5">
+              <Users className="h-4 w-4" />
+              {participantCount}
+            </span>
           </span>
-          <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-            ● Live
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+            <Radio className="h-3.5 w-3.5" />
+            Live
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -299,13 +320,16 @@ export default function PresenterView({ presentation, slides }: Props) {
             disabled={working}
             className="rounded-lg border border-red-200 bg-red-50 px-4 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-100 disabled:opacity-40"
           >
-            End Session
+            <span className="inline-flex items-center gap-1.5">
+              <Square className="h-3.5 w-3.5" />
+              End Session
+            </span>
           </button>
         </div>
       </div>
 
       {/* Slide + Results */}
-      <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
+      <div className="flex flex-1 overflow-hidden">
         {/* Question panel */}
         <div className="flex flex-1 flex-col items-center justify-center gap-8 p-10 lg:p-16">
           <div className="w-full max-w-2xl space-y-8">
@@ -313,7 +337,7 @@ export default function PresenterView({ presentation, slides }: Props) {
               {currentSlide.type === "poll" ? "Poll" : "Open-ended"} · Slide{" "}
               {currentSlideIndex + 1}
             </span>
-            <h1 className="font-serif text-4xl font-light leading-tight text-charcoal-900 lg:text-5xl">
+            <h1 className="font-serif text-4xl leading-tight font-light text-charcoal-900 lg:text-5xl">
               {currentSlide.question}
             </h1>
             {currentSlide.type === "poll" && currentSlide.options && (
@@ -335,13 +359,13 @@ export default function PresenterView({ presentation, slides }: Props) {
         </div>
 
         {/* Results panel */}
-        <div className="flex w-full shrink-0 flex-col overflow-hidden border-t border-beige-200 bg-beige-100/60 lg:w-[360px] lg:border-t-0 lg:border-l">
+        <div className="flex w-[420px] shrink-0 flex-col border-l border-beige-200 bg-beige-100/60">
           <div className="border-b border-beige-200 px-6 py-4">
             <p className="text-xs font-medium tracking-widest text-taupe-400 uppercase">
               Live Results
             </p>
           </div>
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex flex-1 flex-col overflow-hidden p-6">
             {currentSlide.type === "poll" ? (
               <PollResults slide={currentSlide} responses={responses} />
             ) : (
@@ -356,9 +380,12 @@ export default function PresenterView({ presentation, slides }: Props) {
         <button
           onClick={() => goTo(currentSlideIndex - 1)}
           disabled={isFirst || working}
-          className="rounded-xl border border-beige-200 px-6 py-2.5 text-sm font-medium text-espresso-800 transition-colors hover:bg-beige-100 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="rounded-xl border border-beige-200 px-6 py-2.5 text-sm font-medium text-espresso-800 transition-colors hover:bg-beige-100 disabled:cursor-not-allowed disabled:opacity-30"
         >
-          ← Prev
+          <span className="inline-flex items-center gap-1.5">
+            <ChevronLeft className="h-4 w-4" />
+            Prev
+          </span>
         </button>
         <div className="flex gap-2">
           {slides.map((_, i) => (
@@ -377,9 +404,12 @@ export default function PresenterView({ presentation, slides }: Props) {
         <button
           onClick={() => goTo(currentSlideIndex + 1)}
           disabled={isLast || working}
-          className="rounded-xl bg-clay-500 px-6 py-2.5 text-sm font-medium text-beige-50 transition-colors hover:bg-clay-600 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="rounded-xl bg-clay-500 px-6 py-2.5 text-sm font-medium text-beige-50 transition-colors hover:bg-clay-600 disabled:cursor-not-allowed disabled:opacity-30"
         >
-          Next →
+          <span className="inline-flex items-center gap-1.5">
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </span>
         </button>
       </div>
     </div>
