@@ -288,6 +288,12 @@ export default function PresentationEditor({ presentation }: Props) {
           <p className="text-sm font-medium text-red-700">{error}</p>
         </div>
       )}
+
+      <div className="flex justify-end">
+        <Button type="submit" disabled={saving} className="bg-clay-500 text-beige-50 hover:bg-clay-600">
+          {saving ? "Saving…" : isEdit ? "Save changes" : "Create presentation"}
+        </Button>
+      </div>
     </form>
   )
 }
