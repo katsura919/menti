@@ -41,8 +41,8 @@ export default function PollSlide({ slide, onSubmit, disabled }: Props) {
             onClick={() => setSelectedIndex(i)}
             className={`w-full min-h-[52px] px-4 py-3 rounded-lg border text-left text-base transition-colors active:scale-[0.98] ${
               selectedIndex === i
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background hover:bg-accent border-border'
+                ? 'bg-clay-500 text-beige-50 border-clay-500'
+                : 'bg-white hover:bg-beige-100 border-beige-200 text-charcoal-900'
             }`}
           >
             {option}
@@ -52,7 +52,7 @@ export default function PollSlide({ slide, onSubmit, disabled }: Props) {
       <button
         onClick={handleSubmit}
         disabled={selectedIndex === null || submitting}
-        className="w-full min-h-[52px] py-3 px-4 bg-primary text-primary-foreground rounded-lg font-medium text-base disabled:opacity-50 transition-opacity active:scale-[0.98]"
+        className="w-full min-h-[52px] py-3 px-4 bg-clay-500 text-beige-50 rounded-lg font-medium text-base disabled:opacity-50 transition-opacity active:scale-[0.98] hover:bg-clay-600"
       >
         {submitting ? 'Submitting...' : 'Submit'}
       </button>

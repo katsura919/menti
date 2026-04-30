@@ -36,6 +36,10 @@ function AudienceView() {
 
   const supabase = useMemo(() => createClient(), [])
 
+  const [localName, setLocalName] = useState<string | null>(displayName)
+  const [nameInput, setNameInput] = useState("")
+  const [readyToJoin, setReadyToJoin] = useState(!!displayName)
+
   const [presentation, setPresentation] = useState<Presentation | null>(null)
   const [slides, setSlides] = useState<Slide[]>([])
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
@@ -64,7 +68,7 @@ function AudienceView() {
         .insert({
           presentation_id: presentationId,
           session_id: sessionId,
-          display_name: displayName,
+          display_name: localName,
         })
         .select()
         .single()
@@ -72,10 +76,11 @@ function AudienceView() {
       if (error) throw error
       return data
     },
-    [supabase, displayName]
+    [supabase, localName]
   )
 
   useEffect(() => {
+    if (!readyToJoin) return
     async function init() {
       try {
         const sessionId = getOrCreateSessionId()
@@ -128,7 +133,7 @@ function AudienceView() {
     }
 
     init()
-  }, [code]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [code, readyToJoin]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!presentation) return
@@ -220,6 +225,50 @@ function AudienceView() {
   const alreadyAnswered = currentSlide
     ? answeredSlides.has(currentSlide.id)
     : false
+
+  if (!readyToJoin) {
+    return (
+      <Screen>
+        <div className="card w-full max-w-sm border-beige-200 bg-white/95 p-8">
+          <div className="mb-6 text-center">
+            <p className="text-xs tracking-[0.16em] text-taupe-400 uppercase">
+              TalentMucho Live
+            </p>
+            <h1 className="mt-2 font-serif text-3xl font-light text-charcoal-900">
+              What's your name?
+            </h1>
+            <p className="mt-1 text-sm text-taupe-400">
+              Optional — shown to the presenter
+            </p>
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              setLocalName(nameInput.trim() || null)
+              setReadyToJoin(true)
+            }}
+            className="space-y-4"
+          >
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder="Your name"
+              maxLength={50}
+              autoFocus
+              className="h-11 w-full rounded-xl border-2 border-beige-200 bg-beige-50 px-3 text-charcoal-900 focus:border-clay-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="h-11 w-full rounded-xl bg-clay-500 text-sm font-medium text-beige-50 hover:bg-clay-600"
+            >
+              Join Session
+            </button>
+          </form>
+        </div>
+      </Screen>
+    )
+  }
 
   if (status === "loading") {
     return (
