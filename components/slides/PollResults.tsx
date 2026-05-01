@@ -36,9 +36,8 @@ export default function PollResults({ slide, responses }: Props) {
 
   return (
     <div className="w-full space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="truncate font-medium">{slide.question}</h3>
-        <span className="text-muted-foreground ml-2 shrink-0 text-sm">
+      <div className="flex items-center justify-end">
+        <span className="text-muted-foreground shrink-0 text-sm">
           {total} {total === 1 ? "response" : "responses"}
         </span>
       </div>

@@ -332,49 +332,46 @@ export default function PresenterView({ presentation, slides }: Props) {
       </div>
 
       {/* Slide + Results */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Question panel */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-8 p-10 lg:p-16">
-          <div className="w-full max-w-2xl space-y-8">
-            <span className="text-xs font-medium tracking-widest text-taupe-400 uppercase">
-              {currentSlide.type === "poll" ? "Poll" : "Open-ended"} · Slide{" "}
-              {currentSlideIndex + 1}
-            </span>
-            <h1 className="font-serif text-4xl leading-tight font-light text-charcoal-900 lg:text-5xl">
-              {currentSlide.question}
-            </h1>
-            {currentSlide.type === "poll" && currentSlide.options && (
-              <ul className="space-y-3 pt-2">
-                {currentSlide.options.map((opt, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-4 text-lg text-espresso-800"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-beige-300 font-mono text-sm text-taupe-400">
-                      {String.fromCharCode(65 + i)}
-                    </span>
-                    {opt}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden px-8">
+        {/* Question — fixed */}
+        <div className="shrink-0 space-y-8 py-10">
+          <span className="text-xs font-medium tracking-widest text-taupe-400 uppercase">
+            {currentSlide.type === "poll" ? "Poll" : "Open-ended"} · Slide{" "}
+            {currentSlideIndex + 1}
+          </span>
+          <h1 className="font-serif text-4xl leading-tight font-light text-charcoal-900 lg:text-5xl">
+            {currentSlide.question}
+          </h1>
+          {currentSlide.type === "poll" && currentSlide.options && (
+            <ul className="space-y-3 pt-2">
+              {currentSlide.options.map((opt, i) => (
+                <li
+                  key={i}
+                  className="flex items-center gap-4 text-lg text-espresso-800"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-beige-300 font-mono text-sm text-taupe-400">
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                  {opt}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
-        {/* Results panel */}
-        <div className="flex w-[420px] shrink-0 flex-col border-l border-beige-200 bg-beige-100/60">
-          <div className="border-b border-beige-200 px-6 py-4">
-            <p className="text-xs font-medium tracking-widest text-taupe-400 uppercase">
-              Live Results
-            </p>
-          </div>
-          <div className="flex flex-1 flex-col overflow-hidden p-6">
-            {currentSlide.type === "poll" ? (
-              <PollResults slide={currentSlide} responses={responses} />
-            ) : (
-              <OpenEndedResults slide={currentSlide} responses={responses} />
-            )}
-          </div>
+        {/* Divider */}
+        <div className="shrink-0 border-t border-beige-200" />
+
+        {/* Results — scrollable */}
+        <div className="scrollbar-brown flex flex-1 flex-col overflow-y-auto py-8">
+          <p className="mb-6 shrink-0 text-xs font-medium tracking-widest text-taupe-400 uppercase">
+            Live Results
+          </p>
+          {currentSlide.type === "poll" ? (
+            <PollResults slide={currentSlide} responses={responses} />
+          ) : (
+            <OpenEndedResults slide={currentSlide} responses={responses} />
+          )}
         </div>
       </div>
 

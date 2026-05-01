@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 
 export default function JoinPage() {
   const [code, setCode] = useState("")
-  const [name, setName] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -38,8 +37,7 @@ export default function JoinPage() {
       return
     }
 
-    const params = name.trim() ? `?name=${encodeURIComponent(name.trim())}` : ""
-    router.push(`/join/${trimmed}${params}`)
+    router.push(`/join/${trimmed}`)
   }
 
   return (
@@ -75,21 +73,6 @@ export default function JoinPage() {
                   maxLength={6}
                   required
                   className="h-14 rounded-xl border-2 border-beige-200 bg-beige-50 text-center font-mono text-2xl tracking-[0.25em] text-charcoal-900 uppercase focus-visible:border-clay-500 focus-visible:ring-clay-500/20"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-charcoal-900">
-                  Display Name{" "}
-                  <span className="font-normal text-taupe-400">(optional)</span>
-                </label>
-                <Input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  maxLength={50}
-                  className="h-11 rounded-xl border-2 border-beige-200 bg-beige-50 text-charcoal-900 focus-visible:border-clay-500 focus-visible:ring-clay-500/20"
                 />
               </div>
 

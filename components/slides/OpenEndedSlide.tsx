@@ -25,7 +25,7 @@ export default function OpenEndedSlide({ slide, onSubmit, disabled }: Props) {
     return (
       <div className="w-full space-y-4 text-center">
         <h2 className="text-xl font-semibold leading-snug">{slide.question}</h2>
-        <div className="inline-flex items-center gap-2 rounded-full bg-green-100 dark:bg-green-900/30 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-400">
+        <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-clay-600">
           <span>✓</span> Response recorded
         </div>
       </div>

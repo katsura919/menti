@@ -3,7 +3,8 @@
     "allow": [
       "mcp__supabase__list_projects",
       "mcp__supabase__apply_migration",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)"
     ]
   },
   "enableAllProjectMcpServers": true,

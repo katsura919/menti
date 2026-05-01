@@ -37,8 +37,10 @@ function AudienceView() {
   const supabase = useMemo(() => createClient(), [])
 
   const [localName, setLocalName] = useState<string | null>(displayName)
-  const [nameInput, setNameInput] = useState("")
-  const [readyToJoin, setReadyToJoin] = useState(!!displayName)
+  const [nameInput, setNameInput] = useState(displayName ?? "")
+  const [emailInput, setEmailInput] = useState("")
+  const [countryInput, setCountryInput] = useState("")
+  const [readyToJoin, setReadyToJoin] = useState(false)
 
   const [presentation, setPresentation] = useState<Presentation | null>(null)
   const [slides, setSlides] = useState<Slide[]>([])
@@ -69,6 +71,8 @@ function AudienceView() {
           presentation_id: presentationId,
           session_id: sessionId,
           display_name: localName,
+          email: emailInput || null,
+          country: countryInput || null,
         })
         .select()
         .single()
@@ -76,7 +80,7 @@ function AudienceView() {
       if (error) throw error
       return data
     },
-    [supabase, localName]
+    [supabase, localName, emailInput, countryInput]
   )
 
   useEffect(() => {
@@ -235,32 +239,67 @@ function AudienceView() {
               TalentMucho Live
             </p>
             <h1 className="mt-2 font-serif text-3xl font-light text-charcoal-900">
-              What's your name?
+              Before you join
             </h1>
             <p className="mt-1 text-sm text-taupe-400">
-              Optional — shown to the presenter
+              Fill in your details to participate
             </p>
           </div>
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              setLocalName(nameInput.trim() || null)
+              setLocalName(nameInput.trim())
               setReadyToJoin(true)
             }}
             className="space-y-4"
           >
-            <input
-              type="text"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
-              placeholder="Your name"
-              maxLength={50}
-              autoFocus
-              className="h-11 w-full rounded-xl border-2 border-beige-200 bg-beige-50 px-3 text-charcoal-900 focus:border-clay-500 focus:outline-none"
-            />
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-taupe-400 uppercase tracking-wide">
+                Name
+              </label>
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                placeholder="Your full name"
+                maxLength={50}
+                required
+                autoFocus
+                className="h-11 w-full rounded-xl border-2 border-beige-200 bg-beige-50 px-3 text-charcoal-900 focus:border-clay-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-taupe-400 uppercase tracking-wide">
+                Email
+              </label>
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="you@example.com"
+                maxLength={100}
+                required
+                className="h-11 w-full rounded-xl border-2 border-beige-200 bg-beige-50 px-3 text-charcoal-900 focus:border-clay-500 focus:outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-xs font-medium text-taupe-400 uppercase tracking-wide">
+                Country
+              </label>
+              <input
+                type="text"
+                value={countryInput}
+                onChange={(e) => setCountryInput(e.target.value)}
+                placeholder="e.g. Philippines"
+                maxLength={60}
+                required
+                className="h-11 w-full rounded-xl border-2 border-beige-200 bg-beige-50 px-3 text-charcoal-900 focus:border-clay-500 focus:outline-none"
+              />
+            </div>
             <button
               type="submit"
-              className="h-11 w-full rounded-xl bg-clay-500 text-sm font-medium text-beige-50 hover:bg-clay-600"
+              disabled={!nameInput.trim() || !emailInput.trim() || !countryInput.trim()}
+              className="h-11 w-full rounded-xl bg-clay-500 text-sm font-medium text-beige-50 hover:bg-clay-600 disabled:opacity-50"
             >
               Join Session
             </button>
@@ -369,12 +408,14 @@ function AudienceView() {
         <div className="w-full max-w-lg">
           {currentSlide.type === "poll" ? (
             <PollSlide
+              key={currentSlide.id}
               slide={currentSlide}
               onSubmit={handleSubmit}
               disabled={alreadyAnswered}
             />
           ) : (
             <OpenEndedSlide
+              key={currentSlide.id}
               slide={currentSlide}
               onSubmit={handleSubmit}
               disabled={alreadyAnswered}

@@ -13,13 +13,12 @@ export default function OpenEndedResults({ slide, responses }: Props) {
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="flex shrink-0 items-center justify-between">
-        <h3 className="truncate font-medium">{slide.question}</h3>
-        <span className="ml-2 shrink-0 text-sm text-muted-foreground">
+      <div className="flex shrink-0 items-center justify-end">
+        <span className="shrink-0 text-sm text-muted-foreground">
           {total} {total === 1 ? 'response' : 'responses'}
         </span>
       </div>
-      <div className="scrollbar-brown min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+      <div className="space-y-2 pr-1">
         {responses.length === 0 ? (
           <p className="pt-8 text-center text-sm text-muted-foreground">
             Waiting for responses...

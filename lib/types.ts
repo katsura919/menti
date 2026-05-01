@@ -23,6 +23,8 @@ export type Participant = {
   id: string
   presentation_id: string
   display_name: string | null
+  email: string | null
+  country: string | null
   session_id: string
   joined_at: string
 }
