@@ -39,7 +39,6 @@ function AudienceView() {
   const [localName, setLocalName] = useState<string | null>(displayName)
   const [nameInput, setNameInput] = useState(displayName ?? "")
   const [emailInput, setEmailInput] = useState("")
-  const [countryInput, setCountryInput] = useState("")
   const [readyToJoin, setReadyToJoin] = useState(false)
 
   const [presentation, setPresentation] = useState<Presentation | null>(null)
@@ -72,7 +71,6 @@ function AudienceView() {
           session_id: sessionId,
           display_name: localName,
           email: emailInput || null,
-          country: countryInput || null,
         })
         .select()
         .single()
@@ -80,7 +78,7 @@ function AudienceView() {
       if (error) throw error
       return data
     },
-    [supabase, localName, emailInput, countryInput]
+    [supabase, localName, emailInput]
   )
 
   useEffect(() => {
@@ -282,23 +280,9 @@ function AudienceView() {
                 className="h-11 w-full rounded-xl border-2 border-beige-200 bg-beige-50 px-3 text-charcoal-900 focus:border-clay-500 focus:outline-none"
               />
             </div>
-            <div className="space-y-1">
-              <label className="block text-xs font-medium text-taupe-400 uppercase tracking-wide">
-                Country
-              </label>
-              <input
-                type="text"
-                value={countryInput}
-                onChange={(e) => setCountryInput(e.target.value)}
-                placeholder="e.g. Philippines"
-                maxLength={60}
-                required
-                className="h-11 w-full rounded-xl border-2 border-beige-200 bg-beige-50 px-3 text-charcoal-900 focus:border-clay-500 focus:outline-none"
-              />
-            </div>
             <button
               type="submit"
-              disabled={!nameInput.trim() || !emailInput.trim() || !countryInput.trim()}
+              disabled={!nameInput.trim() || !emailInput.trim()}
               className="h-11 w-full rounded-xl bg-clay-500 text-sm font-medium text-beige-50 hover:bg-clay-600 disabled:opacity-50"
             >
               Join Session

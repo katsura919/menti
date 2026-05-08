@@ -4,7 +4,11 @@
       "mcp__supabase__list_projects",
       "mcp__supabase__apply_migration",
       "Bash(npm install *)",
-      "Bash(npm uninstall *)"
+      "Bash(npm uninstall *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\ReactJS\\\\ABIE\\\\menti\\\\app\\\\\\(presenter\\)\" -Recurse -Force)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(npm info *)"
     ]
   },
   "enableAllProjectMcpServers": true,
