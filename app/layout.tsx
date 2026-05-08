@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import { Cormorant_Garamond, Manrope } from "next/font/google"
 
 import "./globals.css"
@@ -16,6 +17,11 @@ const manrope = Manrope({
   subsets: ["latin"],
   display: "swap",
 })
+
+export const metadata: Metadata = {
+  title: "Menti",
+  description: "Interactive presentation and audience engagement platform",
+}
 
 export default function RootLayout({
   children,
