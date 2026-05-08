@@ -185,7 +185,7 @@ export default function PresenterView({ presentation, slides }: Props) {
 
         {/* Main lobby card */}
         <div className="flex flex-1 items-center justify-center p-8">
-          <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-beige-200 bg-white shadow-lg">
+          <div className="w-full max-w-7xl overflow-hidden rounded-2xl border border-beige-200 bg-white shadow-lg">
             <div className="flex flex-col md:flex-row">
               {/* QR side */}
               <div className="flex flex-col items-center justify-center gap-5 bg-beige-50 p-10 md:w-[280px] md:shrink-0">
@@ -332,7 +332,7 @@ export default function PresenterView({ presentation, slides }: Props) {
       </div>
 
       {/* Slide + Results */}
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col overflow-hidden px-8">
         {/* Question — fixed */}
         <div className="shrink-0 space-y-8 py-10">
           <span className="text-xs font-medium tracking-widest text-taupe-400 uppercase">

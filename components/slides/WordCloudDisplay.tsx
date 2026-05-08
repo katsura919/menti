@@ -56,7 +56,7 @@ export default function WordCloudDisplay({ words }: Props) {
   }
 
   return (
-    <div className="w-full" style={{ height: 360 }}>
+    <div className="mx-auto w-full max-w-2xl" style={{ height: 360 }}>
       <WordCloud
         data={data}
         width={620}
